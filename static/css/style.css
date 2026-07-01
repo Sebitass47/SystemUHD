@@ -207,35 +207,31 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(-
 [data-theme="clean"] .hud-logo { filter: none; color: #3b82f6; }
 
 /* ════════════════════════════════════════
-   GRID LAYOUT
+   GRID LAYOUT — mismo para todos los temas
    ════════════════════════════════════════ */
 .grid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  grid-template-rows: 1fr;
+  grid-template-columns: minmax(130px,1.1fr) repeat(3,1fr) minmax(140px,1.1fr);
+  grid-template-rows: 1fr minmax(120px, 0.7fr);
   gap: .55rem;
   padding: .55rem .7rem;
   height: calc(100vh - 62px - 28px);
-}
-
-/* Panel avatar e historial ocultos por defecto */
-.panel-avatar, .panel-history { display: none; }
-
-/* Layout cyberpunk */
-[data-theme="cyberpunk"] .grid {
-  grid-template-columns: minmax(130px,1.1fr) repeat(3,1fr) minmax(140px,1.1fr);
-  grid-template-rows: 1fr auto;
   grid-template-areas:
     "avatar cpu  ram  gpu  disk"
     "avatar hist hist hist net ";
 }
-[data-theme="cyberpunk"] .panel-avatar  { display: flex; grid-area: avatar; }
-[data-theme="cyberpunk"] .panel-cpu     { grid-area: cpu; }
-[data-theme="cyberpunk"] .panel-ram     { grid-area: ram; }
-[data-theme="cyberpunk"] .panel-gpu     { grid-area: gpu; }
-[data-theme="cyberpunk"] .panel-disk    { grid-area: disk; }
-[data-theme="cyberpunk"] .panel-net     { grid-area: net; }
-[data-theme="cyberpunk"] .panel-history { display: flex; grid-area: hist; }
+
+.panel-avatar  { display: flex; grid-area: avatar; }
+.panel-cpu     { grid-area: cpu; }
+.panel-ram     { grid-area: ram; }
+.panel-gpu     { grid-area: gpu; }
+.panel-disk    { grid-area: disk; }
+.panel-net     { grid-area: net; }
+.panel-history { display: flex; grid-area: hist; }
+
+/* El mini-chart de CPU dentro del panel se oculta
+   (reemplazado por el panel HISTORIAL dedicado) */
+#cpu-chart { display: none; }
 
 /* ════════════════════════════════════════
    PANELS
@@ -362,11 +358,26 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(-
    CIRCULAR GAUGE (solo cyberpunk)
    ════════════════════════════════════════ */
 .gauge-wrap { display: none; position: relative; }
-[data-theme="cyberpunk"] .gauge-wrap { display: flex; justify-content: center; align-items: center; margin: .3rem auto; }
-[data-theme="cyberpunk"] .big-value { display: none; }
+
+/* cyberpunk: muestra gauges, oculta barras y valores grandes en panels de métrica */
+[data-theme="cyberpunk"] .panel-cpu .gauge-wrap,
+[data-theme="cyberpunk"] .panel-ram .gauge-wrap,
+[data-theme="cyberpunk"] .panel-gpu .gauge-wrap { display: flex; justify-content: center; align-items: center; margin: .3rem auto; }
+
+[data-theme="cyberpunk"] .panel-cpu .big-value,
+[data-theme="cyberpunk"] .panel-ram .big-value,
+[data-theme="cyberpunk"] .panel-gpu .big-value { display: none; }
+
 [data-theme="cyberpunk"] .core-grid { display: none; }
-[data-theme="cyberpunk"] canvas { display: none; }
-[data-theme="cyberpunk"] .panel-history canvas { display: block; }
+
+/* En cyberpunk los panels de métrica no muestran canvas
+   (el chart de CPU va en el panel-history) */
+[data-theme="cyberpunk"] .panel-cpu canvas,
+[data-theme="cyberpunk"] .panel-ram canvas,
+[data-theme="cyberpunk"] .panel-gpu canvas { display: none; }
+
+/* El panel-history siempre muestra su canvas */
+.panel-history canvas { display: block; }
 
 .gauge-svg { width: 90px; height: 90px; }
 .gauge-track { fill: none; stroke: rgba(255,255,255,0.07); stroke-width: 8; }
