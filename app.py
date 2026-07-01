@@ -3,6 +3,9 @@ import psutil
 import subprocess
 import platform
 import time
+import json
+import winreg
+from datetime import datetime
 
 app = Flask(__name__)
 
@@ -15,12 +18,11 @@ def get_gpu_info():
         result = subprocess.run(
             [
                 "nvidia-smi",
-                "--query-gpu=name,utilization.gpu,memory.used,memory.total,temperature.gpu,fan.speed",
+                "--query-gpu=name,utilization.gpu,memory.used,memory.total,"
+                "temperature.gpu,fan.speed,clocks.current.graphics",
                 "--format=csv,noheader,nounits",
             ],
-            capture_output=True,
-            text=True,
-            timeout=2,
+            capture_output=True, text=True, timeout=2,
         )
         if result.returncode == 0:
             parts = [p.strip() for p in result.stdout.strip().split(",")]
@@ -31,6 +33,7 @@ def get_gpu_info():
                 "memory_total": int(parts[3]),
                 "temperature": int(parts[4]),
                 "fan_speed": int(parts[5]) if parts[5] not in ("[N/A]", "N/A") else None,
+                "clock_mhz": int(parts[6]) if parts[6] not in ("[N/A]", "N/A") else None,
             }
     except Exception:
         pass
@@ -49,29 +52,35 @@ def get_cpu_temp():
     return None
 
 
+def get_cpu_model():
+    try:
+        key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE,
+                             r"HARDWARE\DESCRIPTION\System\CentralProcessor\0")
+        name = winreg.QueryValueEx(key, "ProcessorNameString")[0].strip()
+        winreg.CloseKey(key)
+        return name
+    except Exception:
+        return platform.processor() or "CPU"
+
+
 def get_disk_info():
-    # On Windows, find the system drive (C:) and any other physical drives
-    disks = []
-    seen = set()
     for part in psutil.disk_partitions(all=False):
-        if part.fstype == "" or part.mountpoint in seen:
+        if part.fstype == "" or not part.mountpoint.upper().startswith("C"):
             continue
         try:
             usage = psutil.disk_usage(part.mountpoint)
-            seen.add(part.mountpoint)
-            disks.append({
-                "label": part.mountpoint.replace("\\", ""),
+            return {
+                "label": "C:",
                 "percent": round(usage.percent, 1),
                 "used_gb": round(usage.used / (1024**3), 1),
                 "total_gb": round(usage.total / (1024**3), 1),
-            })
+            }
         except Exception:
             continue
-    # Return C: drive preferentially
-    c_drive = next((d for d in disks if d["label"].upper().startswith("C")), None)
-    return c_drive or (disks[0] if disks else {
-        "label": "C:", "percent": 0, "used_gb": 0, "total_gb": 0
-    })
+    d = psutil.disk_usage("/")
+    return {"label": "/", "percent": round(d.percent, 1),
+            "used_gb": round(d.used / (1024**3), 1),
+            "total_gb": round(d.total / (1024**3), 1)}
 
 
 @app.route("/")
@@ -86,11 +95,8 @@ def stats():
     cpu_percent = psutil.cpu_percent(interval=0.1)
     cpu_per_core = psutil.cpu_percent(percpu=True, interval=None)
     cpu_freq = psutil.cpu_freq()
-    cpu_count_logical = psutil.cpu_count(logical=True)
-    cpu_count_physical = psutil.cpu_count(logical=False)
 
     mem = psutil.virtual_memory()
-
     disk = get_disk_info()
 
     now = time.time()
@@ -104,52 +110,39 @@ def stats():
     _prev_net = net
     _prev_net_time = now
 
-    uptime_seconds = int(time.time() - psutil.boot_time())
-    hours, rem = divmod(uptime_seconds, 3600)
-    minutes, seconds = divmod(rem, 60)
+    uptime_s = int(time.time() - psutil.boot_time())
+    h, rem = divmod(uptime_s, 3600)
+    m, s = divmod(rem, 60)
 
-    cpu_model = platform.processor()
-    # Try to get a cleaner name on Windows
-    try:
-        import winreg
-        key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE,
-                             r"HARDWARE\DESCRIPTION\System\CentralProcessor\0")
-        cpu_model = winreg.QueryValueEx(key, "ProcessorNameString")[0].strip()
-        winreg.CloseKey(key)
-    except Exception:
-        pass
-
-    return jsonify(
-        {
-            "cpu": {
-                "percent": round(cpu_percent, 1),
-                "per_core": [round(p, 1) for p in cpu_per_core],
-                "freq_current": round(cpu_freq.current, 0) if cpu_freq else None,
-                "freq_max": round(cpu_freq.max, 0) if cpu_freq else None,
-                "logical_cores": cpu_count_logical,
-                "physical_cores": cpu_count_physical,
-                "temperature": get_cpu_temp(),
-                "model": cpu_model,
-            },
-            "memory": {
-                "percent": round(mem.percent, 1),
-                "used_gb": round(mem.used / (1024**3), 2),
-                "total_gb": round(mem.total / (1024**3), 1),
-                "available_gb": round(mem.available / (1024**3), 2),
-            },
-            "disk": disk,
-            "network": {
-                "upload_bps": round(net_up, 0),
-                "download_bps": round(net_down, 0),
-                "total_sent_gb": round(net.bytes_sent / (1024**3), 2),
-                "total_recv_gb": round(net.bytes_recv / (1024**3), 2),
-            },
-            "gpu": get_gpu_info(),
-            "uptime": f"{hours:02d}:{minutes:02d}:{seconds:02d}",
-            "hostname": platform.node(),
-            "os": f"{platform.system()} {platform.release()}",
-        }
-    )
+    return jsonify({
+        "cpu": {
+            "percent": round(cpu_percent, 1),
+            "per_core": [round(p, 1) for p in cpu_per_core],
+            "freq_current": round(cpu_freq.current, 0) if cpu_freq else None,
+            "freq_max": round(cpu_freq.max, 0) if cpu_freq else None,
+            "logical_cores": psutil.cpu_count(logical=True),
+            "physical_cores": psutil.cpu_count(logical=False),
+            "temperature": get_cpu_temp(),
+            "model": get_cpu_model(),
+        },
+        "memory": {
+            "percent": round(mem.percent, 1),
+            "used_gb": round(mem.used / (1024**3), 2),
+            "total_gb": round(mem.total / (1024**3), 1),
+            "available_gb": round(mem.available / (1024**3), 2),
+        },
+        "disk": disk,
+        "network": {
+            "upload_bps": round(net_up, 0),
+            "download_bps": round(net_down, 0),
+            "total_sent_gb": round(net.bytes_sent / (1024**3), 2),
+            "total_recv_gb": round(net.bytes_recv / (1024**3), 2),
+        },
+        "gpu": get_gpu_info(),
+        "uptime": f"{h:02d}:{m:02d}:{s:02d}",
+        "hostname": platform.node(),
+        "os": f"Windows {platform.version().split('.')[2] if platform.system()=='Windows' else platform.release()}",
+    })
 
 
 if __name__ == "__main__":

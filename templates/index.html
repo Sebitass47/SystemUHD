@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es" data-theme="cyber">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#000a12" />
+  <meta name="theme-color" content="#060c14" />
   <title>SYSTEM HUD</title>
   <link rel="manifest" href="/static/manifest.json" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -17,224 +17,204 @@
   <header class="hud-header">
     <div class="corner-bracket tl"></div>
     <div class="header-left">
-      <span class="label">SYS</span>
-      <span class="hostname" id="hostname">LOADING...</span>
+      <span class="header-prefix">SYS</span>
+      <span class="hostname" id="hostname">—</span>
+      <span class="header-os" id="header-os"></span>
     </div>
     <div class="header-center">
       <div class="title-row">
         <svg class="hud-logo" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-          <!-- outer hex ring -->
-          <polygon points="24,2 43,13 43,35 24,46 5,35 5,13" fill="none" stroke="#00f5ff" stroke-width="1.2" opacity="0.5"/>
-          <!-- inner hex -->
-          <polygon points="24,8 38,16 38,32 24,40 10,32 10,16" fill="none" stroke="#00f5ff" stroke-width="1" opacity="0.25"/>
-          <!-- crosshair lines -->
-          <line x1="24" y1="2" x2="24" y2="10" stroke="#00f5ff" stroke-width="1.5"/>
-          <line x1="24" y1="38" x2="24" y2="46" stroke="#00f5ff" stroke-width="1.5"/>
-          <line x1="5" y1="13" x2="12" y2="17" stroke="#00f5ff" stroke-width="1.5"/>
-          <line x1="36" y1="31" x2="43" y2="35" stroke="#00f5ff" stroke-width="1.5"/>
-          <line x1="5" y1="35" x2="12" y2="31" stroke="#00f5ff" stroke-width="1.5"/>
-          <line x1="36" y1="17" x2="43" y2="13" stroke="#00f5ff" stroke-width="1.5"/>
-          <!-- center reticle -->
-          <circle cx="24" cy="24" r="6" fill="none" stroke="#00f5ff" stroke-width="1.2"/>
-          <circle cx="24" cy="24" r="2" fill="#00f5ff" opacity="0.9"/>
-          <line x1="18" y1="24" x2="21" y2="24" stroke="#00f5ff" stroke-width="1"/>
-          <line x1="27" y1="24" x2="30" y2="24" stroke="#00f5ff" stroke-width="1"/>
-          <line x1="24" y1="18" x2="24" y2="21" stroke="#00f5ff" stroke-width="1"/>
-          <line x1="24" y1="27" x2="24" y2="30" stroke="#00f5ff" stroke-width="1"/>
-          <!-- spinning ring (animated via CSS) -->
-          <circle class="logo-spin" cx="24" cy="24" r="10" fill="none" stroke="#00f5ff" stroke-width="0.8"
-            stroke-dasharray="8 4" opacity="0.6"/>
+          <polygon points="24,2 43,13 43,35 24,46 5,35 5,13" fill="none" stroke="currentColor" stroke-width="1.2" opacity="0.5"/>
+          <polygon points="24,8 38,16 38,32 24,40 10,32 10,16" fill="none" stroke="currentColor" stroke-width="1" opacity="0.25"/>
+          <line x1="24" y1="2"  x2="24" y2="10" stroke="currentColor" stroke-width="1.5"/>
+          <line x1="24" y1="38" x2="24" y2="46" stroke="currentColor" stroke-width="1.5"/>
+          <line x1="5"  y1="13" x2="12" y2="17" stroke="currentColor" stroke-width="1.5"/>
+          <line x1="36" y1="31" x2="43" y2="35" stroke="currentColor" stroke-width="1.5"/>
+          <line x1="5"  y1="35" x2="12" y2="31" stroke="currentColor" stroke-width="1.5"/>
+          <line x1="36" y1="17" x2="43" y2="13" stroke="currentColor" stroke-width="1.5"/>
+          <circle cx="24" cy="24" r="6"  fill="none" stroke="currentColor" stroke-width="1.2"/>
+          <circle cx="24" cy="24" r="2"  fill="currentColor" opacity="0.9"/>
+          <line x1="18" y1="24" x2="21" y2="24" stroke="currentColor" stroke-width="1"/>
+          <line x1="27" y1="24" x2="30" y2="24" stroke="currentColor" stroke-width="1"/>
+          <line x1="24" y1="18" x2="24" y2="21" stroke="currentColor" stroke-width="1"/>
+          <line x1="24" y1="27" x2="24" y2="30" stroke="currentColor" stroke-width="1"/>
+          <circle class="logo-spin" cx="24" cy="24" r="10" fill="none" stroke="currentColor" stroke-width="0.8" stroke-dasharray="8 4" opacity="0.6"/>
         </svg>
         <div class="title-glow">SYSTEM<span class="title-accent">HUD</span></div>
       </div>
       <div class="uptime-row">
         <span class="label">UPTIME</span>
         <span id="uptime" class="value-mono">00:00:00</span>
-        <span class="label" style="margin-left:1.5rem">OS</span>
+        <span class="sep">·</span>
         <span id="os" class="value-mono">—</span>
       </div>
     </div>
     <div class="header-right">
-      <span class="label">STATUS</span>
-      <span class="status-dot online"></span>
-      <span class="status-text">ONLINE</span>
+      <span id="current-time" class="current-time">00:00:00</span>
+      <div class="status-group">
+        <span class="status-dot"></span>
+        <span class="status-text">ONLINE</span>
+      </div>
     </div>
     <div class="corner-bracket tr"></div>
   </header>
 
   <main class="grid">
 
-    <!-- CPU Panel -->
-    <div class="panel panel-cpu" id="panel-cpu">
+    <!-- Avatar panel (solo cyberpunk) -->
+    <div class="panel panel-avatar" id="panel-avatar">
+      <div class="avatar-circle">
+        <span id="avatar-initial">S</span>
+        <svg class="avatar-ring" viewBox="0 0 100 100">
+          <circle cx="50" cy="50" r="44" fill="none" stroke="currentColor" stroke-width="2" opacity="0.3" stroke-dasharray="6 4"/>
+        </svg>
+      </div>
+      <div class="avatar-name" id="avatar-name">—</div>
+      <div class="avatar-specs">
+        <div id="avatar-cpu-model" class="avatar-spec">—</div>
+        <div id="avatar-gpu-name" class="avatar-spec">—</div>
+        <div id="avatar-ram" class="avatar-spec">— GB DDR5</div>
+      </div>
+    </div>
+
+    <!-- CPU -->
+    <div class="panel panel-cpu">
       <div class="panel-corner tl"></div><div class="panel-corner tr"></div>
       <div class="panel-corner bl"></div><div class="panel-corner br"></div>
-      <div class="panel-label">CPU</div>
+      <div class="panel-label">■ CPU</div>
       <div class="panel-model" id="cpu-model">—</div>
-      <div class="big-value">
-        <span id="cpu-percent">—</span><span class="unit">%</span>
+      <div class="gauge-wrap">
+        <svg class="gauge-svg" viewBox="0 0 100 100">
+          <circle class="gauge-track" cx="50" cy="50" r="38"/>
+          <circle class="gauge-fill cpu-stroke" id="cpu-gauge-fill" cx="50" cy="50" r="38"/>
+        </svg>
+        <div class="gauge-center">
+          <span class="gauge-val cpu-color" id="cpu-gauge-val">0</span>
+          <span class="gauge-sub" id="cpu-gauge-sub">—°C</span>
+        </div>
       </div>
-      <div class="bar-wrap">
-        <div class="bar" id="cpu-bar"><div class="bar-fill" id="cpu-bar-fill"></div></div>
-      </div>
+      <div class="big-value cpu-color"><span id="cpu-percent">—</span><span class="unit">%</span></div>
+      <div class="bar-wrap"><div class="bar"><div class="bar-fill cpu-fill" id="cpu-bar-fill"></div></div></div>
       <div class="stats-row">
-        <div class="stat">
-          <span class="label">FREQ</span>
-          <span id="cpu-freq" class="value-mono">—</span>
-          <span class="unit">MHz</span>
-        </div>
-        <div class="stat">
-          <span class="label">CORES</span>
-          <span id="cpu-cores" class="value-mono">—</span>
-        </div>
-        <div class="stat">
-          <span class="label">TEMP</span>
-          <span id="cpu-temp" class="value-mono">—</span>
-          <span class="unit">°C</span>
-        </div>
+        <div class="stat"><span class="label">FREC</span> <span id="cpu-freq" class="value-mono">—</span><span class="unit">MHz</span></div>
+        <div class="stat"><span class="label">NUC</span> <span id="cpu-cores" class="value-mono">—</span></div>
+        <div class="stat"><span class="label">TEMP</span> <span id="cpu-temp" class="value-mono">—</span><span class="unit">°C</span></div>
       </div>
       <div class="core-grid" id="core-grid"></div>
-      <canvas id="cpu-chart" height="60"></canvas>
+      <canvas id="cpu-chart" height="50"></canvas>
     </div>
 
-    <!-- RAM Panel -->
-    <div class="panel panel-ram" id="panel-ram">
+    <!-- RAM -->
+    <div class="panel panel-ram">
       <div class="panel-corner tl"></div><div class="panel-corner tr"></div>
       <div class="panel-corner bl"></div><div class="panel-corner br"></div>
-      <div class="panel-label">MEMORY</div>
-      <div class="big-value">
-        <span id="ram-percent">—</span><span class="unit">%</span>
+      <div class="panel-label">MEMORIA</div>
+      <div class="gauge-wrap">
+        <svg class="gauge-svg" viewBox="0 0 100 100">
+          <circle class="gauge-track" cx="50" cy="50" r="38"/>
+          <circle class="gauge-fill ram-stroke" id="ram-gauge-fill" cx="50" cy="50" r="38"/>
+        </svg>
+        <div class="gauge-center">
+          <span class="gauge-val ram-color" id="ram-gauge-val">0</span>
+          <span class="gauge-sub" id="ram-gauge-sub">—GB</span>
+        </div>
       </div>
-      <div class="bar-wrap">
-        <div class="bar"><div class="bar-fill green" id="ram-bar-fill"></div></div>
-      </div>
+      <div class="big-value ram-color"><span id="ram-percent">—</span><span class="unit">%</span></div>
+      <div class="bar-wrap"><div class="bar"><div class="bar-fill ram-fill" id="ram-bar-fill"></div></div></div>
       <div class="stats-row">
-        <div class="stat">
-          <span class="label">USED</span>
-          <span id="ram-used" class="value-mono">—</span>
-          <span class="unit">GB</span>
-        </div>
-        <div class="stat">
-          <span class="label">TOTAL</span>
-          <span id="ram-total" class="value-mono">—</span>
-          <span class="unit">GB</span>
-        </div>
-        <div class="stat">
-          <span class="label">FREE</span>
-          <span id="ram-free" class="value-mono">—</span>
-          <span class="unit">GB</span>
-        </div>
+        <div class="stat"><span class="label">USADA</span> <span id="ram-used" class="value-mono">—</span><span class="unit">GB</span></div>
+        <div class="stat"><span class="label">LIBRE</span> <span id="ram-free" class="value-mono">—</span><span class="unit">GB</span></div>
+        <div class="stat"><span class="label">TOTAL</span> <span id="ram-total" class="value-mono">—</span><span class="unit">GB</span></div>
       </div>
-      <canvas id="ram-chart" height="60"></canvas>
+      <canvas id="ram-chart" height="50"></canvas>
     </div>
 
-    <!-- GPU Panel -->
-    <div class="panel panel-gpu" id="panel-gpu">
+    <!-- GPU -->
+    <div class="panel panel-gpu">
       <div class="panel-corner tl"></div><div class="panel-corner tr"></div>
       <div class="panel-corner bl"></div><div class="panel-corner br"></div>
       <div class="panel-label">GPU</div>
-      <div class="panel-model" id="gpu-model">NO GPU DETECTED</div>
-      <div class="big-value">
-        <span id="gpu-percent">—</span><span class="unit">%</span>
+      <div class="panel-model" id="gpu-model">NO GPU</div>
+      <div class="gauge-wrap">
+        <svg class="gauge-svg" viewBox="0 0 100 100">
+          <circle class="gauge-track" cx="50" cy="50" r="38"/>
+          <circle class="gauge-fill gpu-stroke" id="gpu-gauge-fill" cx="50" cy="50" r="38"/>
+        </svg>
+        <div class="gauge-center">
+          <span class="gauge-val gpu-color" id="gpu-gauge-val">0</span>
+          <span class="gauge-sub" id="gpu-gauge-sub">—°C</span>
+        </div>
       </div>
-      <div class="bar-wrap">
-        <div class="bar"><div class="bar-fill purple" id="gpu-bar-fill"></div></div>
-      </div>
+      <div class="big-value gpu-color"><span id="gpu-percent">—</span><span class="unit">%</span></div>
+      <div class="bar-wrap"><div class="bar"><div class="bar-fill gpu-fill" id="gpu-bar-fill"></div></div></div>
       <div class="stats-row">
-        <div class="stat">
-          <span class="label">VRAM</span>
-          <span id="gpu-vram-used" class="value-mono">—</span>
-          <span class="unit">MB</span>
-        </div>
-        <div class="stat">
-          <span class="label">TOTAL</span>
-          <span id="gpu-vram-total" class="value-mono">—</span>
-          <span class="unit">MB</span>
-        </div>
-        <div class="stat">
-          <span class="label">TEMP</span>
-          <span id="gpu-temp" class="value-mono">—</span>
-          <span class="unit">°C</span>
-        </div>
+        <div class="stat"><span class="label">VRAM</span> <span id="gpu-vram-used" class="value-mono">—</span><span class="unit">MB</span></div>
+        <div class="stat"><span class="label">CLK</span> <span id="gpu-clock" class="value-mono">—</span><span class="unit">MHz</span></div>
+        <div class="stat"><span class="label">TEMP</span> <span id="gpu-temp" class="value-mono">—</span><span class="unit">°C</span></div>
       </div>
-      <div class="stats-row" style="margin-top:.5rem">
-        <div class="stat">
-          <span class="label">FAN</span>
-          <span id="gpu-fan" class="value-mono">—</span>
-          <span class="unit">%</span>
-        </div>
-      </div>
-      <canvas id="gpu-chart" height="60"></canvas>
+      <div class="stat" style="margin-top:.2rem"><span class="label">FAN</span> <span id="gpu-fan" class="value-mono">—</span><span class="unit">%</span></div>
+      <canvas id="gpu-chart" height="50"></canvas>
     </div>
 
-    <!-- Disk Panel -->
+    <!-- Disco -->
     <div class="panel panel-disk">
       <div class="panel-corner tl"></div><div class="panel-corner tr"></div>
       <div class="panel-corner bl"></div><div class="panel-corner br"></div>
-      <div class="panel-label">STORAGE <span id="disk-label" style="opacity:.6;font-size:.55rem"></span></div>
-      <div class="big-value">
-        <span id="disk-percent">—</span><span class="unit">%</span>
-      </div>
-      <div class="bar-wrap">
-        <div class="bar"><div class="bar-fill orange" id="disk-bar-fill"></div></div>
-      </div>
+      <div class="panel-label">DISCO <span id="disk-label">C:</span></div>
+      <div class="big-value disk-color"><span id="disk-percent">—</span><span class="unit">%</span></div>
+      <div class="bar-wrap"><div class="bar"><div class="bar-fill disk-fill" id="disk-bar-fill"></div></div></div>
       <div class="stats-row">
-        <div class="stat">
-          <span class="label">USED</span>
-          <span id="disk-used" class="value-mono">—</span>
-          <span class="unit">GB</span>
-        </div>
-        <div class="stat">
-          <span class="label">TOTAL</span>
-          <span id="disk-total" class="value-mono">—</span>
-          <span class="unit">GB</span>
-        </div>
+        <div class="stat"><span class="label">USADO</span> <span id="disk-used" class="value-mono">—</span><span class="unit">GB</span></div>
+        <div class="stat"><span class="label">TOTAL</span> <span id="disk-total" class="value-mono">—</span><span class="unit">GB</span></div>
       </div>
       <div class="disk-visual" id="disk-visual"></div>
     </div>
 
-    <!-- Network Panel -->
+    <!-- Red -->
     <div class="panel panel-net">
       <div class="panel-corner tl"></div><div class="panel-corner tr"></div>
       <div class="panel-corner bl"></div><div class="panel-corner br"></div>
-      <div class="panel-label">NETWORK</div>
+      <div class="panel-label">RED</div>
       <div class="net-row">
-        <div class="net-direction">
-          <div class="net-arrow up">▲</div>
-          <div class="label">UPLOAD</div>
-          <div class="net-speed" id="net-up">—</div>
+        <div class="net-direction up">
+          <span class="net-arrow">▲</span>
+          <span class="label">SUBIDA</span>
+          <span class="net-speed" id="net-up">—</span>
         </div>
         <div class="net-divider"></div>
-        <div class="net-direction">
-          <div class="net-arrow down">▼</div>
-          <div class="label">DOWNLOAD</div>
-          <div class="net-speed" id="net-down">—</div>
+        <div class="net-direction down">
+          <span class="net-arrow">▼</span>
+          <span class="label">BAJADA</span>
+          <span class="net-speed" id="net-down">—</span>
         </div>
       </div>
       <canvas id="net-chart" height="55"></canvas>
-      <div class="stats-row" style="margin-top:.5rem">
-        <div class="stat">
-          <span class="label">SENT</span>
-          <span id="net-sent" class="value-mono">—</span>
-          <span class="unit">GB</span>
-        </div>
-        <div class="stat">
-          <span class="label">RECV</span>
-          <span id="net-recv" class="value-mono">—</span>
-          <span class="unit">GB</span>
-        </div>
+      <div class="stats-row" style="margin-top:.4rem">
+        <div class="stat"><span class="label">ENV</span> <span id="net-sent" class="value-mono">—</span><span class="unit">GB</span></div>
+        <div class="stat"><span class="label">REC</span> <span id="net-recv" class="value-mono">—</span><span class="unit">GB</span></div>
       </div>
+    </div>
+
+    <!-- Historial CPU (solo cyberpunk) -->
+    <div class="panel panel-history" id="panel-history">
+      <div class="panel-corner tl"></div><div class="panel-corner tr"></div>
+      <div class="panel-corner bl"></div><div class="panel-corner br"></div>
+      <div class="panel-label">CARGA CPU · HISTORIAL <span style="opacity:.5;font-size:.5rem;float:right">60s</span></div>
+      <canvas id="cpu-history-chart"></canvas>
     </div>
 
   </main>
 
+  <button class="theme-btn" id="theme-btn" title="Cambiar tema">
+    <span class="theme-icon">◈</span>
+    <span class="theme-name" id="theme-name">CYBER</span>
+  </button>
+
   <footer class="hud-footer">
     <div class="corner-bracket bl"></div>
-    <span class="label">REFRESH</span>
-    <span class="value-mono" id="refresh-counter">1.5s</span>
-    <span class="footer-sep">//</span>
     <span class="label">SYSTEM HUD</span>
     <span class="footer-sep">//</span>
-    <span class="label">PWA v1.0</span>
+    <span class="label">PWA v2.0</span>
     <div class="corner-bracket br"></div>
   </footer>
 
